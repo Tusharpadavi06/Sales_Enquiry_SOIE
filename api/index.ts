@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express from "express";
 import path from "path";
 import cors from "cors";
@@ -171,8 +172,19 @@ app.post("/api/submit-enquiry", async (req, res) => {
 
   try {
     const authKeyStr = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
-    if (!authKeyStr) throw new Error("Key missing");
-    const credentials = JSON.parse(authKeyStr);
+    if (!authKeyStr) {
+      console.error("GOOGLE_SERVICE_ACCOUNT_KEY is missing in environment variables.");
+      throw new Error("Google Service Account Key is missing. Please check your environment variables.");
+    }
+    
+    let credentials;
+    try {
+      credentials = JSON.parse(authKeyStr);
+    } catch (parseErr) {
+      console.error("Failed to parse GOOGLE_SERVICE_ACCOUNT_KEY as JSON. Ensure the entire JSON from the service account key file is pasted.");
+      throw new Error("Invalid Google Service Account Key format. It must be a valid JSON string.");
+    }
+
     const auth = new google.auth.GoogleAuth({ 
       credentials, 
       scopes: [
@@ -328,8 +340,17 @@ app.get("/api/enquiry/:id", async (req, res) => {
   
   try {
     const authKeyStr = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
-    if (!authKeyStr) throw new Error("Key missing");
-    const credentials = JSON.parse(authKeyStr);
+    if (!authKeyStr) {
+      throw new Error("Google Service Account Key is missing. Please check your environment variables.");
+    }
+    
+    let credentials;
+    try {
+      credentials = JSON.parse(authKeyStr);
+    } catch (parseErr) {
+      throw new Error("Invalid Google Service Account Key format. It must be a valid JSON string.");
+    }
+
     const auth = new google.auth.GoogleAuth({ credentials, scopes: ["https://www.googleapis.com/auth/spreadsheets"] });
     const sheets = google.sheets({ version: "v4", auth });
 
@@ -392,8 +413,17 @@ app.post("/api/update-enquiry", async (req, res) => {
 
   try {
     const authKeyStr = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
-    if (!authKeyStr) throw new Error("Key missing");
-    const credentials = JSON.parse(authKeyStr);
+    if (!authKeyStr) {
+      throw new Error("Google Service Account Key is missing. Please check your environment variables.");
+    }
+    
+    let credentials;
+    try {
+      credentials = JSON.parse(authKeyStr);
+    } catch (parseErr) {
+      throw new Error("Invalid Google Service Account Key format. It must be a valid JSON string.");
+    }
+
     const auth = new google.auth.GoogleAuth({ credentials, scopes: ["https://www.googleapis.com/auth/spreadsheets"] });
     const sheets = google.sheets({ version: "v4", auth });
 
