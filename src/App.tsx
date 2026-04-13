@@ -66,13 +66,28 @@ function EnquiryForm({ user, handleLogin, handleLogout }: { user: User | null, h
     setMessage('');
 
     try {
+      // Calculate approximate size
+      const payloadSize = JSON.stringify(formData).length;
+      if (payloadSize > 80 * 1024 * 1024) { // 80MB limit as a safety buffer for 100MB server limit
+        setStatus('error');
+        setMessage('Total attachment size is too large. Please upload smaller files.');
+        return;
+      }
+
       const response = await fetch('/api/submit-enquiry', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
+      let data;
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.indexOf("application/json") !== -1) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+        data = { message: text || `Server error: ${response.status}` };
+      }
 
       if (response.ok) {
         setStatus('success');
@@ -95,11 +110,11 @@ function EnquiryForm({ user, handleLogin, handleLogout }: { user: User | null, h
         });
       } else {
         setStatus('error');
-        setMessage(data.message || 'Something went wrong');
+        setMessage(data.message || `Error ${response.status}: Something went wrong`);
       }
     } catch (err) {
       setStatus('error');
-      setMessage('Failed to connect to the server.');
+      setMessage('Failed to connect to the server. The request might be too large or the server is busy.');
     }
   };
 
